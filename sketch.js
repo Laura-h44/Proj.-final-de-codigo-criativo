@@ -1,27 +1,19 @@
-
 let starsX = [];
 let starsY = [];
-
-let osc;
+let audioCtx;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   background(10, 10, 25);
-
-  osc = new p5.Oscillator('sine');
-  osc.amp(0);
-  osc.start();
 }
 
 function draw() {
   background(10, 10, 25);
 
   for (let i = 0; i < starsX.length; i++) {
-    for (let j = 0; j < starsX.length; j++) {
-
-       let distance = dist(starsX[i], starsY[i], starsX[j], starsY[j]);
-
-        if (distance < 150) {
+    for (let j = i + 1; j < starsX.length; j++) {
+      let distance = dist(starsX[i], starsY[i], starsX[j], starsY[j]);
+      if (distance < 150) {
         stroke(173, 216, 230, 100);
         strokeWeight(1);
         line(starsX[i], starsY[i], starsX[j], starsY[j]);
@@ -31,24 +23,45 @@ function draw() {
 
   for (let i = 0; i < starsX.length; i++) {
     fill(255);
-     noStroke();
-    ellipse(starsX[i], starsY[i], 10, 10); // Draws a circle
+    noStroke();
+    ellipse(starsX[i], starsY[i], 10, 10); 
   }
-
-  fill(255, 150);
-  textAlign(CENTER);
-  text("Click to create permanent stars", width / 2, 30);
 }
 
 function mousePressed() {
-   starsX.push(mouseX);
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  } 
+
+  starsX.push(mouseX);
   starsY.push(mouseY);
 
-  let frequency = map(mouseY, height, 0, 200, 800); 
-  osc.freq(frequency);
+  let frequency = map(mouseY, height, 0, 200, 700); 
+  playStarSound(frequency);
+}
 
-   osc.amp(0.3, 0.05);
-  osc.amp(0, 0.3);
+
+function playStarSound(freq) {
+  if (!audioCtx) return;
+
+  let osc = audioCtx.createOscillator();
+  let gainNode = audioCtx.createGain();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  
+  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+  osc.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.4);
 }
 
 function windowResized() {
