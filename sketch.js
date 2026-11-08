@@ -1,5 +1,6 @@
 let starsX = [];
 let starsY = [];
+let starColors = [];
 let oscs = [];
 
 let chords = [
@@ -39,7 +40,7 @@ function draw() {
   }
   
   for (let i = 0; i < starsX.length; i++) {
-    fill(255);
+    fill(starColors[i]);
     noStroke();
     ellipse(starsX[i], starsY[i], 10, 10);
   }
@@ -48,8 +49,16 @@ function draw() {
 function mousePressed() {
   userStartAudio();
 
+  for (let i = 0; i < 3; i++) {
+    oscs[i].amp(0, 0.05);
+    
+  }
+
   starsX.push(mouseX);
   starsY.push(mouseY);
+
+  let randomColor = color(random(150, 255), random(150, 255), random(150, 255));
+  starColors.push(randomColor);
   
   let chordIndex = floor(map(mouseX, 0, width, 0, chords.length));
   chordIndex = constrain(chordIndex, 0, chords.length - 1);
@@ -57,9 +66,9 @@ function mousePressed() {
   
   let octave;
   if (mouseY < height / 3) {
-    octave = 2.0;  
+    octave = 1.0;  
   } else if (mouseY > (height / 3) * 2) {
-    octave = 0.5;  
+    octave = 1.0;  
   } else {
     octave = 1.0;  
   }
@@ -67,15 +76,10 @@ function mousePressed() {
   for (let i = 0; i < 3; i++) {
     let finalFrequency = selectedChord[i] * octave;
     oscs[i].freq(finalFrequency);
-    oscs[i].amp(0.15); 
+    oscs[i].amp(0.15, 0.1); 
   }
-  
-  setTimeout(function() {
-    for (let i = 0; i < 3; i++) {
-      oscs[i].amp(0, 0.1);
-    }
-  }, 2000); 
 }
+  
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
