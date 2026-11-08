@@ -1,18 +1,35 @@
 let starsX = [];
 let starsY = [];
-let audioCtx;
+let oscs = [];
+
+let chords = [
+  [261.63, 329.63, 392.00], 
+  [293.66, 349.23, 440.00], 
+  [329.63, 392.00, 493.88], 
+  [349.23, 440.00, 523.25], 
+  [392.00, 493.88, 587.33], 
+  [440.00, 523.25, 659.25], 
+  [493.88, 587.33, 698.46]  
+];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   background(10, 10, 25);
+  
+  for (let i = 0; i < 3; i++) {
+    oscs[i] = new p5.Oscillator('sine');
+    oscs[i].start();
+    oscs[i].amp(0);
+  }
 }
 
 function draw() {
   background(10, 10, 25);
-
+  
   for (let i = 0; i < starsX.length; i++) {
     for (let j = i + 1; j < starsX.length; j++) {
       let distance = dist(starsX[i], starsY[i], starsX[j], starsY[j]);
+      
       if (distance < 150) {
         stroke(173, 216, 230, 100);
         strokeWeight(1);
@@ -20,48 +37,44 @@ function draw() {
       }
     }
   }
-
+  
   for (let i = 0; i < starsX.length; i++) {
     fill(255);
     noStroke();
-    ellipse(starsX[i], starsY[i], 10, 10); 
+    ellipse(starsX[i], starsY[i], 10, 10);
   }
 }
 
 function mousePressed() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  } 
+  userStartAudio();
 
   starsX.push(mouseX);
   starsY.push(mouseY);
-
-  let frequency = map(mouseY, height, 0, 200, 700); 
-  playStarSound(frequency);
-}
-
-
-function playStarSound(freq) {
-  if (!audioCtx) return;
-
-  let osc = audioCtx.createOscillator();
-  let gainNode = audioCtx.createGain();
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
   
-  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.4);
+  let chordIndex = floor(map(mouseX, 0, width, 0, chords.length));
+  chordIndex = constrain(chordIndex, 0, chords.length - 1);
+  let selectedChord = chords[chordIndex];
+  
+  let octave;
+  if (mouseY < height / 3) {
+    octave = 2.0;  
+  } else if (mouseY > (height / 3) * 2) {
+    octave = 0.5;  
+  } else {
+    octave = 1.0;  
+  }
+  
+  for (let i = 0; i < 3; i++) {
+    let finalFrequency = selectedChord[i] * octave;
+    oscs[i].freq(finalFrequency);
+    oscs[i].amp(0.15); 
+  }
+  
+  setTimeout(function() {
+    for (let i = 0; i < 3; i++) {
+      oscs[i].amp(0, 0.1);
+    }
+  }, 2000); 
 }
 
 function windowResized() {
