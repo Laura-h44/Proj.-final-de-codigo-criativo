@@ -69,7 +69,7 @@ function mousePressed() {
   
   let octave;
   if (mouseY < height / 3) {
-    octave = 1.0;  
+    octave = 1.5;  
   } else if (mouseY > (height / 3) * 2) {
     octave = 1.0;  
   } else {
@@ -91,7 +91,6 @@ function mousePressed() {
         }
   }, 10000);
 }
-
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
