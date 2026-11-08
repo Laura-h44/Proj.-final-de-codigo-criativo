@@ -2,6 +2,7 @@ let starsX = [];
 let starsY = [];
 let starColors = [];
 let oscs = [];
+let silenceTimer;
 
 let chords = [
   [261.63, 329.63, 392.00], 
@@ -49,6 +50,8 @@ function draw() {
 function mousePressed() {
   userStartAudio();
 
+  clearTimeout(silenceTimer);
+
   for (let i = 0; i < 3; i++) {
     oscs[i].amp(0, 0.05);
     
@@ -74,12 +77,21 @@ function mousePressed() {
   }
   
   for (let i = 0; i < 3; i++) {
+    oscs[i].amp(0.15, 0); 
+  }
+
+  for (let i = 0; i < 3; i++) {
     let finalFrequency = selectedChord[i] * octave;
     oscs[i].freq(finalFrequency);
-    oscs[i].amp(0.15, 0.1); 
-  }
+  }   
+
+    silenceTimer = setTimeout(function() {
+    for (let i = 0; i < 3; i++) {
+       oscs[i].amp(0, 2.0);
+        }
+  }, 10000);
 }
-  
+
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
